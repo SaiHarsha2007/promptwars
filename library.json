@@ -1,0 +1,20 @@
+[
+  {
+    "video_id": "edu_01",
+    "title": "Visualizing Big-O Notation and Array Sliding Windows",
+    "transcript_summary": "A deep dive into data structures and algorithms. Explains time complexity, memory allocation, and array optimization for engineering interviews.",
+    "category": "DSA"
+  },
+  {
+    "video_id": "edu_02",
+    "title": "How AWS Allocates Physical Servers for EC2 Instances",
+    "transcript_summary": "Systems architecture and cloud infrastructure explanation. Looks at physical hypervisors, server racks, virtualization layers, and hardware management.",
+    "category": "Cloud / Hardware"
+  },
+  {
+    "video_id": "edu_03",
+    "title": "Building a Secure Web Scraper with Python and BeautifulSoup",
+    "transcript_summary": "Practical scripting tutorial. Teaches ethical scraping, data pipelining, bypassing simple IP blocks, and clean parsing without getting banned.",
+    "category": "Other"
+  }
+]
