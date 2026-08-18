@@ -140,7 +140,7 @@ with col2:
                     
          
                     response = client.chat.completions.create(
-                        model="llama-3.3-70b-versatile",
+                        model="meta-llama/llama-3.3-70b-versatile",
                         messages=[
                             {"role": "system", "content": SYSTEM_PROMPT},
                             {"role": "user", "content": user_instruction}
