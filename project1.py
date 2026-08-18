@@ -134,8 +134,6 @@ with col2:
                     * **CONFIDENCE**: [High / Medium / Low]"""
                     
                     user_instruction = f"""
-                    System Instructions to follow: {SYSTEM_PROMPT}
-                    
                     Student History Logs to evaluate:
                     {student_history}
                     
@@ -145,17 +143,35 @@ with col2:
                     Category: {matched_video['category']}
                     """
                     
-                    # 3. Establish the cloud client using the background Groq API key and base endpoint url mapping
-                    client = Groq(api_key=groq_key.strip(), base_url="https://api.groq.com/openai/v1")
+                    # 3. Establish the cloud client using the standard constructor
+                    client = Groq(api_key=groq_key.strip())
                     
-                    # 4. Trigger the reasoning model response using the official Responses endpoint
-                    response = client.responses.create(
+                    # 4. Trigger the reasoning model response using the standard ChatCompletion endpoint
+                    response = client.chat.completions.create(
                         model="openai/gpt-oss-20b",
-                        input=user_instruction
+                        messages=[
+                            {"role": "system", "content": SYSTEM_PROMPT},
+                            {"role": "user", "content": user_instruction}
+                        ],
+                        temperature=0.1
                     )
                     
-                    # 5. Extract text safely using Groq's official response parameter mapping string
-                    agent_reply = response.output_text
+                    # 5. Bulletproof Extraction: Unpack response safely whether it is returned as an object or dictionary list
+                    try:
+                        # Attempt standard object unwrap
+                        agent_reply = response.choices[0].message.content
+                    except (AttributeError, TypeError, KeyError, IndexError):
+                        try:
+                            # Fallback if dictionary layers are exposed
+                            if isinstance(response, dict):
+                                agent_reply = response['choices'][0]['message']['content']
+                            elif isinstance(getattr(response, 'choices', None), list):
+                                item = response.choices[0]
+                                agent_reply = item.get('message', {}).get('content', '') if isinstance(item, dict) else item.message.content
+                            else:
+                                agent_reply = str(response)
+                        except Exception:
+                            agent_reply = str(response)
                     
                     # 6. Render response cleanly to user window
                     st.success("Evaluation Engine Dispatched Successfully!")
@@ -163,6 +179,5 @@ with col2:
                     
                 except Exception as e:
                     st.error(f"Execution Error: {e}")
-                    st.info("If you get a base_url error, ensure your groq library is updated to the latest release.")
     else:
         st.info("Click the button on the left to trigger the AI Agent evaluation cycle.")
