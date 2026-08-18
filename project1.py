@@ -3,11 +3,13 @@ import json
 import os
 from groq import Groq
 
-
+# ──────────────────────────────────────────────────────────
+# 🛠️ BACKEND REELS LOGIC (PURE PYTHON MATCHING ENGINE)
+# ──────────────────────────────────────────────────────────
 
 st.set_page_config(page_title="AI Student Recommendation Agent", page_icon="🎓", layout="wide")
 
-
+# High-utility course corrections library
 EDUCATIONAL_VIDEOS = [
     {
         "id": "edu_01",
@@ -37,7 +39,7 @@ def find_best_video_match(student_history_text):
     best_match = EDUCATIONAL_VIDEOS[0]
     highest_score = -1
     
-
+    # Simple semantic token keyword overlapping search
     search_words = set(student_history_text.lower().replace("-", " ").split())
     
     for video in EDUCATIONAL_VIDEOS:
@@ -50,7 +52,9 @@ def find_best_video_match(student_history_text):
             
     return best_match
 
-
+# ──────────────────────────────────────────────────────────
+# 🎛️ SIDEBAR CONFIGURATION (AUTOMATED KEY MATCHING)
+# ──────────────────────────────────────────────────────────
 
 groq_key = None
 if "GROQ_API_KEY" in st.secrets:
@@ -67,6 +71,9 @@ with st.sidebar:
         st.error("⚠️ Background Key Missing")
         st.caption("Please add GROQ_API_KEY to your Streamlit Cloud Advanced Settings Secrets box.")
 
+# ──────────────────────────────────────────────────────────
+# 🖥️ MAIN WEB DASHBOARD UI
+# ──────────────────────────────────────────────────────────
 
 st.title("🎓 AI Student Scroll Optimizer")
 st.caption("Transforming passive entertainment and meme interactions into high-utility skill pathways.")
@@ -99,10 +106,10 @@ with col2:
         else:
             with st.spinner("Analyzing semantics and evaluating library options..."):
                 try:
-                 
+                    # 1. Match the best video out of our data block using our clean script engine
                     matched_video = find_best_video_match(student_history)
                     
-                    
+                    # 2. Configure system agent behavior routing instructions
                     SYSTEM_PROMPT = """You are an expert AI Learning Agent. Your job is to analyze a student's recent short-form video watch history.
                     Infer their deep, underlying technical interests. Do not rely on shallow keyword matching.
                     Confirm if the automatically retrieved recommended video matches their deeper structural learning path.
@@ -127,7 +134,9 @@ with col2:
                     * **CONFIDENCE**: [High / Medium / Low]"""
                     
                     user_instruction = f"""
-                    Student History Logs:
+                    System Instructions to follow: {SYSTEM_PROMPT}
+                    
+                    Student History Logs to evaluate:
                     {student_history}
                     
                     Retrieved Recommendation from Library:
@@ -135,33 +144,25 @@ with col2:
                     Summary: {matched_video['summary']}
                     Category: {matched_video['category']}
                     """
-                 
-                    client = Groq(api_key=groq_key.strip())
                     
-         
-                    response = client.chat.completions.create(
+                    # 3. Establish the cloud client using the background Groq API key and base endpoint url mapping
+                    client = Groq(api_key=groq_key.strip(), base_url="https://api.groq.com/openai/v1")
+                    
+                    # 4. Trigger the reasoning model response using the official Responses endpoint
+                    response = client.responses.create(
                         model="openai/gpt-oss-20b",
-                        messages=[
-                            {"role": "system", "content": SYSTEM_PROMPT},
-                            {"role": "user", "content": user_instruction}
-                        ],
-                        temperature=0.1
+                        input=user_instruction
                     )
-                    if isinstance(response, list):
-                        # Extracts text if Groq returns a flat list array
-                        agent_reply = response[0]
-                    elif hasattr(response, 'choices') and len(response.choices) > 0:
-                        # Standard Groq client completion object wrapper
-                        agent_reply = response.choices[0].message.content
-                    else:
-                        # Fallback backup converter
-                        agent_reply = str(response)
-         
-                    st.success("Evaluation Engine Dispatched Successfully!")
                     
-                    st.markdown(response.choices.message.content)
+                    # 5. Extract text safely using Groq's official response parameter mapping string
+                    agent_reply = response.output_text
+                    
+                    # 6. Render response cleanly to user window
+                    st.success("Evaluation Engine Dispatched Successfully!")
+                    st.markdown(agent_reply)
                     
                 except Exception as e:
                     st.error(f"Execution Error: {e}")
+                    st.info("If you get a base_url error, ensure your groq library is updated to the latest release.")
     else:
         st.info("Click the button on the left to trigger the AI Agent evaluation cycle.")
