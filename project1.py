@@ -2,14 +2,7 @@ import streamlit as st
 import json
 import os
 from groq import Groq
-
-# ──────────────────────────────────────────────────────────
-# 🛠️ BACKEND REELS LOGIC (PURE PYTHON MATCHING ENGINE)
-# ──────────────────────────────────────────────────────────
-
 st.set_page_config(page_title="AI Student Recommendation Agent", page_icon="🎓", layout="wide")
-
-# High-utility course corrections library
 EDUCATIONAL_VIDEOS = [
     {
         "id": "edu_01",
@@ -39,7 +32,7 @@ def find_best_video_match(student_history_text):
     best_match = EDUCATIONAL_VIDEOS[0]
     highest_score = -1
     
-    # Simple semantic token keyword overlapping search
+   
     search_words = set(student_history_text.lower().replace("-", " ").split())
     
     for video in EDUCATIONAL_VIDEOS:
@@ -52,9 +45,6 @@ def find_best_video_match(student_history_text):
             
     return best_match
 
-# ──────────────────────────────────────────────────────────
-# 🎛️ SIDEBAR CONFIGURATION (AUTOMATED KEY MATCHING)
-# ──────────────────────────────────────────────────────────
 
 groq_key = None
 if "GROQ_API_KEY" in st.secrets:
@@ -71,9 +61,7 @@ with st.sidebar:
         st.error("⚠️ Background Key Missing")
         st.caption("Please add GROQ_API_KEY to your Streamlit Cloud Advanced Settings Secrets box.")
 
-# ──────────────────────────────────────────────────────────
-# 🖥️ MAIN WEB DASHBOARD UI
-# ──────────────────────────────────────────────────────────
+
 
 st.title("🎓 AI Student Scroll Optimizer")
 st.caption("Transforming passive entertainment and meme interactions into high-utility skill pathways.")
@@ -106,10 +94,10 @@ with col2:
         else:
             with st.spinner("Analyzing semantics and evaluating library options..."):
                 try:
-                    # 1. Match the best video out of our data block using our clean script engine
+              
                     matched_video = find_best_video_match(student_history)
                     
-                    # 2. Configure system agent behavior routing instructions
+      
                     SYSTEM_PROMPT = """You are an expert AI Learning Agent. Your job is to analyze a student's recent short-form video watch history.
                     Infer their deep, underlying technical interests. Do not rely on shallow keyword matching.
                     Confirm if the automatically retrieved recommended video matches their deeper structural learning path.
@@ -143,10 +131,10 @@ with col2:
                     Category: {matched_video['category']}
                     """
                     
-                    # 3. Establish the cloud client using the standard constructor
+              
                     client = Groq(api_key=groq_key.strip())
                     
-                    # 4. Trigger the reasoning model response using the standard ChatCompletion endpoint
+                 
                     response = client.chat.completions.create(
                         model="openai/gpt-oss-20b",
                         messages=[
@@ -156,13 +144,13 @@ with col2:
                         temperature=0.1
                     )
                     
-                    # 5. Bulletproof Extraction: Unpack response safely whether it is returned as an object or dictionary list
+           
                     try:
-                        # Attempt standard object unwrap
+             
                         agent_reply = response.choices[0].message.content
                     except (AttributeError, TypeError, KeyError, IndexError):
                         try:
-                            # Fallback if dictionary layers are exposed
+   
                             if isinstance(response, dict):
                                 agent_reply = response['choices'][0]['message']['content']
                             elif isinstance(getattr(response, 'choices', None), list):
@@ -173,7 +161,7 @@ with col2:
                         except Exception:
                             agent_reply = str(response)
                     
-                    # 6. Render response cleanly to user window
+       
                     st.success("Evaluation Engine Dispatched Successfully!")
                     st.markdown(agent_reply)
                     
