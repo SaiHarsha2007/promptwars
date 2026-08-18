@@ -147,7 +147,7 @@ with col2:
                         ],
                         temperature=0.1
                     )
-                    
+                    agent_reply = response.choices[0].message.content
          
                     st.success("Evaluation Engine Dispatched Successfully!")
                     if hasattr(response, 'choices') and len(response.choices) > 0:
