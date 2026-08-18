@@ -3,56 +3,55 @@ import json
 import os
 from groq import Groq
 
-# ──────────────────────────────────────────────────────────
-# 🛠️ BACKEND VECTOR DB INITIALIZATION
-# ──────────────────────────────────────────────────────────
+
 
 st.set_page_config(page_title="AI Student Recommendation Agent", page_icon="🎓", layout="wide")
 
-@st.cache_resource
-def init_vector_db():
-    chroma_client = chromadb.Client()
-    try:
-        collection = chroma_client.create_collection(name="educational_reels")
+
+EDUCATIONAL_VIDEOS = [
+    {
+        "id": "edu_01",
+        "title": "Visualizing Big-O Notation and Array Sliding Windows",
+        "summary": "A deep dive into data structures and algorithms. Explains time complexity, memory allocation, and array optimization for engineering interviews.",
+        "category": "DSA"
+    },
+    {
+        "id": "edu_02",
+        "title": "How AWS Allocates Physical Servers for EC2 Instances",
+        "summary": "Systems architecture and cloud infrastructure explanation. Looks at physical hypervisors, server racks, virtualization layers, and hardware management.",
+        "category": "Cloud / Hardware"
+    },
+    {
+        "id": "edu_03",
+        "title": "Building a Secure Web Scraper with Python and BeautifulSoup",
+        "summary": "Practical scripting tutorial. Teaches ethical scraping, data pipelining, bypassing simple IP blocks, and clean parsing without getting banned.",
+        "category": "Other"
+    }
+]
+
+def find_best_video_match(student_history_text):
+    """
+    Scans the library using pure Python text scoring.
+    Bypasses system database engine blocks entirely.
+    """
+    best_match = EDUCATIONAL_VIDEOS[0]
+    highest_score = -1
+    
+
+    search_words = set(student_history_text.lower().replace("-", " ").split())
+    
+    for video in EDUCATIONAL_VIDEOS:
+        video_words = set(video["summary"].lower().split()) | set(video["title"].lower().split())
+        match_score = len(search_words.intersection(video_words))
         
-        educational_videos = [
-            {
-                "id": "edu_01",
-                "title": "Visualizing Big-O Notation and Array Sliding Windows",
-                "summary": "A deep dive into data structures and algorithms. Explains time complexity, memory allocation, and array optimization for engineering interviews.",
-                "category": "DSA"
-            },
-            {
-                "id": "edu_02",
-                "title": "How AWS Allocates Physical Servers for EC2 Instances",
-                "summary": "Systems architecture and cloud infrastructure explanation. Looks at physical hypervisors, server racks, virtualization layers, and hardware management.",
-                "category": "Cloud / Hardware"
-            },
-            {
-                "id": "edu_03",
-                "title": "Building a Secure Web Scraper with Python and BeautifulSoup",
-                "summary": "Practical scripting tutorial. Teaches ethical scraping, data pipelining, bypassing simple IP blocks, and clean parsing without getting banned.",
-                "category": "Other"
-            }
-        ]
+        if match_score > highest_score:
+            highest_score = match_score
+            best_match = video
+            
+    return best_match
 
-        for video in educational_videos:
-            collection.add(
-                documents=[video["summary"]],
-                metadatas=[{"title": video["title"], "category": video["category"]}],
-                ids=[video["id"]]
-            )
-    except Exception:
-        collection = chroma_client.get_collection(name="educational_reels")
-    return collection
 
-video_collection = init_vector_db()
 
-# ──────────────────────────────────────────────────────────
-# 🎛️ SIDEBAR CONFIGURATION (AUTOMATED KEY MATCHING)
-# ──────────────────────────────────────────────────────────
-
-# Automatically check for your hidden background Groq Key
 groq_key = None
 if "GROQ_API_KEY" in st.secrets:
     groq_key = st.secrets["GROQ_API_KEY"]
@@ -66,11 +65,8 @@ with st.sidebar:
         st.caption("The developer has provided background credentials. This application is ready for immediate public use.")
     else:
         st.error("⚠️ Background Key Missing")
-        st.caption("If running locally, please add GROQ_API_KEY to your system environment variables or .env configuration.")
+        st.caption("Please add GROQ_API_KEY to your Streamlit Cloud Advanced Settings Secrets box.")
 
-# ──────────────────────────────────────────────────────────
-# 🖥️ MAIN WEB DASHBOARD UI
-# ──────────────────────────────────────────────────────────
 
 st.title("🎓 AI Student Scroll Optimizer")
 st.caption("Transforming passive entertainment and meme interactions into high-utility skill pathways.")
@@ -97,23 +93,16 @@ with col2:
     
     if submit_btn:
         if not groq_key:
-            st.error("❌ Cloud Host Deployment Configuration Error: The server has no background GROQ_API_KEY saved in Advanced Settings!")
+            st.error("❌ Cloud Host Deployment Configuration Error: Go to Advanced Settings -> Secrets and add your GROQ_API_KEY!")
         elif not student_history.strip():
             st.warning("Please provide student logs to process!")
         else:
-            with st.spinner("Analyzing semantics and searching local Vector DB..."):
+            with st.spinner("Analyzing semantics and evaluating library options..."):
                 try:
-                    # 1. Pull the closest context piece from ChromaDB
-                    search_results = video_collection.query(
-                        query_texts=[student_history],
-                        n_results=1
-                    )
+                 
+                    matched_video = find_best_video_match(student_history)
                     
-                    matched_title = search_results['metadatas'][0]['title']
-                    matched_summary = search_results['documents'][0]
-                    matched_category = search_results['metadatas'][0]['category']
                     
-                    # 2. Configure system agent behavior routing instructions
                     SYSTEM_PROMPT = """You are an expert AI Learning Agent. Your job is to analyze a student's recent short-form video watch history.
                     Infer their deep, underlying technical interests. Do not rely on shallow keyword matching.
                     Confirm if the automatically retrieved recommended video matches their deeper structural learning path.
@@ -141,16 +130,15 @@ with col2:
                     Student History Logs:
                     {student_history}
                     
-                    Retrieved Recommendation from Vector DB:
-                    Title: {matched_title}
-                    Summary: {matched_summary}
-                    Category: {matched_category}
+                    Retrieved Recommendation from Library:
+                    Title: {matched_video['title']}
+                    Summary: {matched_video['summary']}
+                    Category: {matched_video['category']}
                     """
-                    
-                    # 3. Establish the cloud client using the background Groq API key
+                 
                     client = Groq(api_key=groq_key.strip())
                     
-                    # 4. Trigger the reasoning model
+         
                     response = client.chat.completions.create(
                         model="llama-3.1-8b-instant",
                         messages=[
@@ -160,7 +148,7 @@ with col2:
                         temperature=0.1
                     )
                     
-                    # 5. Output response to user window
+         
                     st.success("Evaluation Engine Dispatched Successfully!")
                     st.markdown(response.choices.message.content)
                     
