@@ -147,7 +147,15 @@ with col2:
                         ],
                         temperature=0.1
                     )
-                    agent_reply = response.choices[0].message.content
+                    if isinstance(response, list):
+                        # Extracts text if Groq returns a flat list array
+                        agent_reply = response[0]
+                    elif hasattr(response, 'choices') and len(response.choices) > 0:
+                        # Standard Groq client completion object wrapper
+                        agent_reply = response.choices[0].message.content
+                    else:
+                        # Fallback backup converter
+                        agent_reply = str(response)
          
                     st.success("Evaluation Engine Dispatched Successfully!")
                     
