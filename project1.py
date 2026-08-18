@@ -150,17 +150,7 @@ with col2:
                     agent_reply = response.choices[0].message.content
          
                     st.success("Evaluation Engine Dispatched Successfully!")
-                    if hasattr(response, 'choices') and len(response.choices) > 0:
-                        choice = response.choices[0]
-                        # Handle if choice is a dictionary or an object block
-                        if isinstance(choice, dict):
-                            agent_reply = choice.get('message', {}).get('content', str(choice))
-                        else:
-                            agent_reply = choice.message.content if hasattr(choice, 'message') else str(choice)
-                    elif isinstance(response, list) and len(response) > 0:
-                        agent_reply = response[0]
-                    else:
-                        agent_reply = str(response)
+                    
                     st.markdown(response.choices.message.content)
                     
                 except Exception as e:
